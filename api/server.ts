@@ -1,5 +1,4 @@
 import express from 'express';
-import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import axios from 'axios';
 import dotenv from 'dotenv';
@@ -13,8 +12,12 @@ async function startServer() {
 
   app.use(express.json());
 
+  app.get(['/api/health', '/.netlify/functions/server/health', '/health'], (req, res) => {
+    res.json({ status: 'ok', env: process.env.NODE_ENV });
+  });
+
   // API Route for video downloading
-  app.post('/api/fetch-video', async (req, res) => {
+  app.post(['/api/fetch-video', '/.netlify/functions/server/fetch-video', '/fetch-video'], async (req, res) => {
     const { url } = req.body;
 
     if (!url) {
@@ -74,6 +77,7 @@ async function startServer() {
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -104,17 +108,30 @@ async function startServer() {
 let cachedApp: any;
 
 export const handler = async (event: any, context: any) => {
-  if (!cachedApp) {
-    cachedApp = await startServer();
+  try {
+    if (!cachedApp) {
+      cachedApp = await startServer();
+    }
+    
+    // Netlify detection (event.httpMethod exists)
+    if (event.httpMethod) {
+      return await serverless(cachedApp)(event, context);
+    }
+    
+    // Vercel/Express (event is req, context is res)
+    return cachedApp(event, context);
+  } catch (err: any) {
+    console.error('Serverless Handler Error:', err);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        error: 'Serverless Function Error', 
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      })
+    };
   }
-  
-  // Netlify detection (event.httpMethod exists)
-  if (event.httpMethod) {
-    return serverless(cachedApp)(event, context);
-  }
-  
-  // Vercel/Express (event is req, context is res)
-  return cachedApp(event, context);
 };
 
 export default handler;
