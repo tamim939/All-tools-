@@ -118,7 +118,9 @@ export default function App() {
         toast.error(response.data.error || 'Failed to fetch video');
       }
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Something went wrong. Please try again.');
+      console.error('Fetch Error:', error);
+      const serverError = error.response?.data?.error || error.response?.data?.message || error.message;
+      toast.error(serverError || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -17,7 +17,7 @@ async function startServer() {
   });
 
   // API Route for video downloading
-  app.post(['/api/fetch-video', '/.netlify/functions/server/fetch-video', '/fetch-video'], async (req, res) => {
+  app.post(['/api/fetch-video', '/fetch-video', '*/fetch-video'], async (req, res) => {
     const { url } = req.body;
 
     if (!url) {
@@ -107,29 +107,30 @@ async function startServer() {
 // For Vercel & Netlify Serverless Functions
 let cachedApp: any;
 
-export const handler = async (event: any, context: any) => {
+export const handler = async (req: any, res: any) => {
   try {
     if (!cachedApp) {
       cachedApp = await startServer();
     }
     
-    // Netlify detection (event.httpMethod exists)
-    if (event.httpMethod) {
-      return await serverless(cachedApp)(event, context);
+    // Netlify detection (req.httpMethod exists)
+    if (req.httpMethod || req.headers?.['x-netlify-event']) {
+      const serverlessHandler = serverless(cachedApp);
+      return await serverlessHandler(req, res);
     }
     
-    // Vercel/Express (event is req, context is res)
-    return cachedApp(event, context);
+    // Vercel/Express (req is request, res is response)
+    // For Vercel, we don't return the app call, we just execute it.
+    // Express will handle the response via res.send/json.
+    cachedApp(req, res);
   } catch (err: any) {
     console.error('Serverless Handler Error:', err);
+    if (res && typeof res.status === 'function') {
+      return res.status(500).json({ error: 'Serverless Function Error', message: err.message });
+    }
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        error: 'Serverless Function Error', 
-        message: err.message,
-        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-      })
+      body: JSON.stringify({ error: 'Serverless Function Error', message: err.message })
     };
   }
 };
