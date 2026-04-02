@@ -24,36 +24,22 @@ async function startServer() {
     const rapidApiKey = process.env.RAPIDAPI_KEY;
     const isMock = !rapidApiKey || rapidApiKey === 'MY_RAPIDAPI_KEY' || rapidApiKey === '';
 
-    // If no API key, use mock data for preview
     if (isMock) {
-      console.warn('RAPIDAPI_KEY is missing or default. Using mock data.');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      let platform = 'video';
-      const lowerUrl = url.toLowerCase();
-      if (lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) platform = 'youtube';
-      else if (lowerUrl.includes('tiktok')) platform = 'tiktok';
-      else if (lowerUrl.includes('instagram')) platform = 'instagram';
-      else if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.watch')) platform = 'facebook';
-
+      console.warn('RAPIDAPI_KEY is missing. Using mock data.');
+      await new Promise(resolve => setTimeout(resolve, 800));
       return res.json({
         success: true,
         isMock: true,
         data: {
-          title: `[DEMO] ${platform.charAt(0).toUpperCase() + platform.slice(1)} Video`,
-          thumbnail: `https://picsum.photos/seed/${platform}/800/450`,
-          source: platform,
-          medias: [
-            { url: '#', quality: '720p (HD)', extension: 'mp4', size: '12MB' },
-            { url: '#', quality: '360p (SD)', extension: 'mp4', size: '5MB' }
-          ]
+          title: "Demo Video (API Key Missing)",
+          thumbnail: "https://picsum.photos/seed/demo/800/450",
+          source: "demo",
+          medias: [{ url: '#', quality: '720p', extension: 'mp4', size: '10MB' }]
         }
       });
     }
 
     try {
-      console.log('Fetching video with real API Key...');
-      // Using 'social-download-all-in-one' API from RapidAPI
       const options = {
         method: 'POST',
         url: 'https://social-download-all-in-one.p.rapidapi.com/v1/social/autolink',
@@ -68,14 +54,10 @@ async function startServer() {
       const response = await axios.request(options);
       const data = response.data;
       
-      console.log('API Response received successfully');
-
-      // Map API response to our app's format with better title detection
       const mappedData = {
-        title: data.title || data.description || data.caption || data.text || `${data.source || 'Video'} Download`,
+        title: data.title || data.description || data.caption || `${data.source || 'Video'} Download`,
         thumbnail: data.thumbnail || data.picture || data.cover || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
         source: data.source || 'video',
-        duration: data.duration || '',
         medias: (data.medias || []).map((m: any) => ({
           url: m.url,
           quality: m.quality || 'HD',
@@ -84,15 +66,9 @@ async function startServer() {
         }))
       };
 
-      if (mappedData.medias.length === 0) {
-        return res.status(404).json({ error: 'No download links found. The video might be private or deleted.' });
-      }
-
       res.json({ success: true, isMock: false, data: mappedData });
     } catch (error: any) {
-      console.error('API Error Details:', error.response?.data || error.message);
-      const message = error.response?.data?.message || error.message || 'Failed to fetch video. Please check the link.';
-      res.status(500).json({ error: message });
+      res.status(500).json({ error: error.response?.data?.message || error.message });
     }
   });
 
@@ -103,7 +79,10 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
-  } else {
+  } 
+  // On Vercel/Netlify, we don't serve static files via Express
+  // The platform handles it automatically via the build folder
+  else if (!process.env.VERCEL && !process.env.NETLIFY) {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
