@@ -135,3 +135,11 @@ export const handler = async (event: any, context: any) => {
 };
 
 export default handler;
+
+// For Cloud Run / Local execution
+if (!process.env.VERCEL && !process.env.NETLIFY) {
+  startServer().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
