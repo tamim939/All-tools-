@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import serverless from 'serverless-http';
 
 dotenv.config();
 
@@ -110,8 +111,8 @@ async function startServer() {
     });
   }
 
-  // Only listen if not on Vercel
-  if (!process.env.VERCEL) {
+  // Only listen if not on Vercel or Netlify
+  if (!process.env.VERCEL && !process.env.NETLIFY) {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
@@ -120,11 +121,21 @@ async function startServer() {
   return app;
 }
 
-// For Vercel Serverless Functions
-let app: any;
-export default async (req: any, res: any) => {
-  if (!app) {
-    app = await startServer();
+// For Vercel & Netlify Serverless Functions
+let cachedApp: any;
+
+export const handler = async (event: any, context: any) => {
+  if (!cachedApp) {
+    cachedApp = await startServer();
   }
-  return app(req, res);
+  
+  // Netlify detection (event.httpMethod exists)
+  if (event.httpMethod) {
+    return serverless(cachedApp)(event, context);
+  }
+  
+  // Vercel/Express (event is req, context is res)
+  return cachedApp(event, context);
 };
+
+export default handler;
