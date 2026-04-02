@@ -169,7 +169,7 @@ export default function App() {
             </div>
             <h1 className="text-xl font-bold tracking-tight flex items-center gap-1">
               <span className="text-gray-900 dark:text-white">All Tools</span>
-              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Download Free</span>
+              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Download</span>
             </h1>
           </div>
           
@@ -204,7 +204,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl sm:text-5xl font-extrabold mb-4 tracking-tight"
           >
-            All Tools <span className="text-indigo-600">Download Free</span>
+            All Tools <span className="text-indigo-600">Download</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -470,7 +470,7 @@ export default function App() {
             <Download className="w-5 h-5 text-indigo-600" />
             <span className="text-lg font-bold tracking-tight">
               <span className="text-gray-900 dark:text-white">All Tools</span>{' '}
-              <span className="text-indigo-600">Download Free</span>
+              <span className="text-indigo-600">Download</span>
             </span>
           </div>
           
@@ -488,7 +488,7 @@ export default function App() {
           </div>
 
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
-            All Tools Download Free is a free online tool to download videos from social media platforms. We do not host any content on our servers.
+            All Tools Download is a free online tool to download videos from social media platforms. We do not host any content on our servers.
           </p>
           <div className="flex justify-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
@@ -496,7 +496,7 @@ export default function App() {
             <a href="#" className="hover:text-indigo-600 transition-colors">Contact</a>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-            © {new Date().getFullYear()} All Tools Download Free. All rights reserved.
+            © {new Date().getFullYear()} All Tools Download. All rights reserved.
           </div>
         </div>
       </footer>
