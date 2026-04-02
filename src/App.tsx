@@ -60,11 +60,12 @@ export default function App() {
   });
 
   useEffect(() => {
+    const root = window.document.documentElement;
     if (darkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
   }, [darkMode]);
@@ -172,19 +173,22 @@ export default function App() {
           </div>
           
           <button 
-            onClick={() => setDarkMode(!darkMode)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 group"
+            onClick={() => {
+              console.log('Toggling dark mode to:', !darkMode);
+              setDarkMode(!darkMode);
+            }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 shadow-sm active:scale-95"
             aria-label="Toggle theme"
           >
             {darkMode ? (
               <>
-                <Sun className="w-4 h-4 text-yellow-500" />
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Light</span>
+                <Sun className="w-4 h-4 text-yellow-500 animate-pulse" />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Light Mode</span>
               </>
             ) : (
               <>
                 <Moon className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Dark</span>
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Dark Mode</span>
               </>
             )}
           </button>
