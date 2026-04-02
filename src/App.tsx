@@ -244,72 +244,95 @@ export default function App() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden mb-12"
             >
-              <div className="flex flex-col md:flex-row">
-                {/* Thumbnail */}
-                <div className="md:w-2/5 relative aspect-video md:aspect-auto">
-                  <img 
-                    src={videoData.thumbnail} 
-                    alt={videoData.title}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                  {videoData.duration && (
-                    <div className="absolute bottom-3 right-3 px-2 py-1 bg-black/70 backdrop-blur-sm text-white text-xs font-medium rounded">
-                      {videoData.duration}
+              <div className="flex flex-col">
+                {/* Video Player Section */}
+                <div className="relative bg-black flex items-center justify-center overflow-hidden aspect-video sm:aspect-auto sm:min-h-[400px]">
+                  {videoData.medias && videoData.medias.length > 0 ? (
+                    <video 
+                      key={videoData.medias[0].url}
+                      src={videoData.medias.find(m => m.quality.toLowerCase().includes('no watermark'))?.url || videoData.medias[0].url} 
+                      poster={videoData.thumbnail}
+                      controls
+                      className="w-full h-full max-h-[600px] object-contain"
+                      playsInline
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  ) : (
+                    <div className="relative w-full h-full aspect-video flex items-center justify-center">
+                      <img 
+                        src={videoData.thumbnail} 
+                        alt={videoData.title}
+                        className="w-full h-full object-cover opacity-40 blur-sm"
+                        referrerPolicy="no-referrer"
+                      />
+                      <Video className="w-20 h-20 text-white/20 absolute" />
                     </div>
                   )}
-                  <div className="absolute top-3 left-3 p-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-sm">
-                    {getPlatformIcon(videoData.source)}
-                  </div>
                 </div>
 
-                {/* Info & Downloads */}
-                <div className="md:w-3/5 p-6 sm:p-8 flex flex-col">
-                  <div className="mb-6">
-                    <div className="flex items-start justify-between gap-4 mb-2">
-                      <h3 className="text-xl font-bold leading-tight line-clamp-2">
+                {/* Title & Download Buttons Section */}
+                <div className="p-6 sm:p-8 bg-white dark:bg-gray-900">
+                  {/* Title Section (Moved below video) */}
+                  <div className="mb-8 flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {getPlatformIcon(videoData.source)}
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-500">{videoData.source} Video</span>
+                      </div>
+                      <h3 className="text-xl font-bold leading-tight text-gray-900 dark:text-white">
                         {videoData.title}
                       </h3>
-                      <button 
-                        onClick={() => copyToClipboard(videoData.title, 'Title copied!')}
-                        className="p-2 flex-shrink-0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors group relative"
-                        title="Copy Title"
-                      >
-                        <Copy className="w-5 h-5 text-gray-500 group-hover:text-indigo-600" />
-                      </button>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="capitalize">{videoData.source}</span>
-                      <span>•</span>
-                      <button 
-                        onClick={() => copyToClipboard(url, 'Link copied!')}
-                        className="flex items-center gap-1 hover:text-indigo-600 transition-colors"
-                      >
-                        <LinkIcon className="w-3 h-3" /> Copy Link
-                      </button>
-                    </div>
+                    <button 
+                      onClick={() => copyToClipboard(videoData.title, 'Title copied!')}
+                      className="p-3 bg-gray-50 dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-2xl border border-gray-100 dark:border-gray-700 transition-all group shadow-sm"
+                      title="Copy Title"
+                    >
+                      <Copy className="w-5 h-5 text-gray-400 group-hover:text-indigo-600" />
+                    </button>
                   </div>
 
-                  <div className="space-y-3 mt-auto">
-                    <p className="text-sm font-semibold uppercase tracking-wider text-gray-400">Download Options</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {videoData.medias.map((media, idx) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Video Button (Prefer No Watermark) */}
+                    {(() => {
+                      const videoMedia = videoData.medias.find(m => m.quality.toLowerCase().includes('no watermark')) || 
+                                         videoData.medias.find(m => m.extension === 'mp4') || 
+                                         videoData.medias[0];
+                      return (
                         <a
-                          key={idx}
-                          href={media.url}
+                          href={videoMedia?.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 border border-gray-100 dark:border-gray-800 rounded-xl transition-all group"
+                          className="flex items-center justify-center gap-3 py-5 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold text-lg shadow-xl shadow-indigo-500/30 transition-all active:scale-95"
                         >
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold group-hover:text-indigo-600">{media.quality}</span>
-                            <span className="text-xs text-gray-500">{media.extension.toUpperCase()} {media.size && `• ${media.size}`}</span>
-                          </div>
-                          <Download className="w-4 h-4 text-gray-400 group-hover:text-indigo-600" />
+                          <Download className="w-6 h-6" />
+                          Download Video
                         </a>
-                      ))}
-                    </div>
+                      );
+                    })()}
+
+                    {/* Audio Button */}
+                    {(() => {
+                      const audioMedia = videoData.medias.find(m => m.quality.toLowerCase().includes('audio') || m.extension === 'm4a' || m.extension === 'mp3') || 
+                                         videoData.medias[videoData.medias.length - 1];
+                      return (
+                        <a
+                          href={audioMedia?.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-3 py-5 px-6 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-2xl font-bold text-lg transition-all active:scale-95 border border-gray-200 dark:border-gray-700"
+                        >
+                          <Video className="w-6 h-6 opacity-50" />
+                          Download Audio
+                        </a>
+                      );
+                    })()}
                   </div>
+                  
+                  <p className="text-center mt-6 text-xs text-gray-400 font-medium uppercase tracking-widest">
+                    High Quality • No Watermark • Fast Download
+                  </p>
                 </div>
               </div>
             </motion.div>

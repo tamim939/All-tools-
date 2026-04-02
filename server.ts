@@ -21,22 +21,25 @@ async function startServer() {
     }
 
     const rapidApiKey = process.env.RAPIDAPI_KEY;
+    const isMock = !rapidApiKey || rapidApiKey === 'MY_RAPIDAPI_KEY' || rapidApiKey === '';
 
     // If no API key, use mock data for preview
-    if (!rapidApiKey || rapidApiKey === 'MY_RAPIDAPI_KEY') {
+    if (isMock) {
       console.warn('RAPIDAPI_KEY is missing or default. Using mock data.');
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       let platform = 'video';
-      if (url.includes('youtube') || url.includes('youtu.be')) platform = 'youtube';
-      else if (url.includes('tiktok')) platform = 'tiktok';
-      else if (url.includes('instagram')) platform = 'instagram';
-      else if (url.includes('facebook')) platform = 'facebook';
+      const lowerUrl = url.toLowerCase();
+      if (lowerUrl.includes('youtube') || lowerUrl.includes('youtu.be')) platform = 'youtube';
+      else if (lowerUrl.includes('tiktok')) platform = 'tiktok';
+      else if (lowerUrl.includes('instagram')) platform = 'instagram';
+      else if (lowerUrl.includes('facebook') || lowerUrl.includes('fb.watch')) platform = 'facebook';
 
       return res.json({
         success: true,
+        isMock: true,
         data: {
-          title: `Sample ${platform.charAt(0).toUpperCase() + platform.slice(1)} Video`,
+          title: `[DEMO] ${platform.charAt(0).toUpperCase() + platform.slice(1)} Video`,
           thumbnail: `https://picsum.photos/seed/${platform}/800/450`,
           source: platform,
           medias: [
@@ -48,12 +51,13 @@ async function startServer() {
     }
 
     try {
+      console.log('Fetching video with real API Key...');
       // Using 'social-download-all-in-one' API from RapidAPI
       const options = {
         method: 'POST',
         url: 'https://social-download-all-in-one.p.rapidapi.com/v1/social/autolink',
         headers: {
-          'x-rapidapi-key': rapidApiKey,
+          'x-rapidapi-key': rapidApiKey.trim(),
           'x-rapidapi-host': 'social-download-all-in-one.p.rapidapi.com',
           'Content-Type': 'application/json'
         },
@@ -62,11 +66,13 @@ async function startServer() {
 
       const response = await axios.request(options);
       const data = response.data;
+      
+      console.log('API Response received successfully');
 
-      // Map API response to our app's format
+      // Map API response to our app's format with better title detection
       const mappedData = {
-        title: data.title || 'Video Download',
-        thumbnail: data.thumbnail || data.picture || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
+        title: data.title || data.description || data.caption || data.text || `${data.source || 'Video'} Download`,
+        thumbnail: data.thumbnail || data.picture || data.cover || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
         source: data.source || 'video',
         duration: data.duration || '',
         medias: (data.medias || []).map((m: any) => ({
@@ -78,12 +84,12 @@ async function startServer() {
       };
 
       if (mappedData.medias.length === 0) {
-        throw new Error('No download links found for this video.');
+        return res.status(404).json({ error: 'No download links found. The video might be private or deleted.' });
       }
 
-      res.json({ success: true, data: mappedData });
+      res.json({ success: true, isMock: false, data: mappedData });
     } catch (error: any) {
-      console.error('API Error:', error.response?.data || error.message);
+      console.error('API Error Details:', error.response?.data || error.message);
       const message = error.response?.data?.message || error.message || 'Failed to fetch video. Please check the link.';
       res.status(500).json({ error: message });
     }
