@@ -58,8 +58,8 @@ async function startServer() {
       const data = response.data;
       
       const mappedData = {
-        title: data.title || data.description || data.caption || `${data.source || 'Video'} Download`,
-        thumbnail: data.thumbnail || data.picture || data.cover || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
+        title: data.title || data.description || data.caption || data.text || data.meta?.title || `${data.source || 'Video'} Download`,
+        thumbnail: data.thumbnail || data.picture || data.cover || data.meta?.thumbnail || 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800',
         source: data.source || 'video',
         medias: (data.medias || []).map((m: any) => ({
           url: m.url,

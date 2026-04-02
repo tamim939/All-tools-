@@ -101,18 +101,24 @@ export default function App() {
     toast.success('History cleared');
   };
 
-  const handleFetch = async (e?: FormEvent) => {
+  const handleFetch = async (e?: FormEvent, targetUrl?: string) => {
     if (e) e.preventDefault();
-    if (!url.trim()) return;
+    const finalUrl = targetUrl || url;
+    if (!finalUrl.trim()) return;
+
+    if (targetUrl) {
+      setUrl(targetUrl);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     setLoading(true);
     setVideoData(null);
 
     try {
-      const response = await axios.post('/api/fetch-video', { url });
+      const response = await axios.post('/api/fetch-video', { url: finalUrl });
       if (response.data.success) {
         setVideoData(response.data.data);
-        saveToHistory(response.data.data, url);
+        saveToHistory(response.data.data, finalUrl);
         toast.success('Video data fetched!');
       } else {
         toast.error(response.data.error || 'Failed to fetch video');
@@ -159,17 +165,28 @@ export default function App() {
             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
               <Download className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              StreamSave
+            <h1 className="text-xl font-bold tracking-tight flex items-center gap-1">
+              <span className="text-gray-900 dark:text-white">All Tools</span>
+              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Download Free</span>
             </h1>
           </div>
           
           <button 
             onClick={() => setDarkMode(!darkMode)}
-            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-gray-200 dark:border-gray-700 group"
             aria-label="Toggle theme"
           >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {darkMode ? (
+              <>
+                <Sun className="w-4 h-4 text-yellow-500" />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Light</span>
+              </>
+            ) : (
+              <>
+                <Moon className="w-4 h-4 text-indigo-600" />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Dark</span>
+              </>
+            )}
           </button>
         </div>
       </header>
@@ -182,7 +199,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl sm:text-5xl font-extrabold mb-4 tracking-tight"
           >
-            Download Videos <span className="text-indigo-600">Instantly</span>
+            All Tools <span className="text-indigo-600">Download Free</span>
           </motion.h2>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -387,14 +404,18 @@ export default function App() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button 
-                          onClick={() => {
-                            setUrl(item.url);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
-                          title="Re-fetch"
+                          onClick={() => handleFetch(undefined, item.url)}
+                          className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-md transition-colors"
+                          title="Download Now"
                         >
-                          <Search className="w-3.5 h-3.5" />
+                          <Download className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => copyToClipboard(item.title, 'Title copied!')}
+                          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                          title="Copy Title"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button 
                           onClick={() => copyToClipboard(item.url, 'Link copied!')}
@@ -440,12 +461,29 @@ export default function App() {
 
       <footer className="mt-24 border-t border-gray-200 dark:border-gray-800 py-12 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center justify-center gap-2 mb-4">
             <Download className="w-5 h-5 text-indigo-600" />
-            <span className="text-lg font-bold tracking-tight">StreamSave</span>
+            <span className="text-lg font-bold tracking-tight">
+              <span className="text-gray-900 dark:text-white">All Tools</span>{' '}
+              <span className="text-indigo-600">Download Free</span>
+            </span>
           </div>
+          
+          <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl inline-block border border-gray-100 dark:border-gray-800">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Developed by</p>
+            <a 
+              href="https://www.facebook.com/share/1DHdbobx7M/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-bold transition-colors"
+            >
+              <Facebook className="w-5 h-5" />
+              Tamim Hasan
+            </a>
+          </div>
+
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-8 max-w-md mx-auto">
-            StreamSave is a free online tool to download videos from social media platforms. We do not host any content on our servers.
+            All Tools Download Free is a free online tool to download videos from social media platforms. We do not host any content on our servers.
           </p>
           <div className="flex justify-center gap-6 text-sm font-medium text-gray-600 dark:text-gray-400">
             <a href="#" className="hover:text-indigo-600 transition-colors">Privacy Policy</a>
@@ -453,7 +491,7 @@ export default function App() {
             <a href="#" className="hover:text-indigo-600 transition-colors">Contact</a>
           </div>
           <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800 text-xs text-gray-400">
-            © {new Date().getFullYear()} StreamSave. All rights reserved.
+            © {new Date().getFullYear()} All Tools Download Free. All rights reserved.
           </div>
         </div>
       </footer>
