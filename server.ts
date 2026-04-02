@@ -110,9 +110,21 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  // Only listen if not on Vercel
+  if (!process.env.VERCEL) {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  }
+
+  return app;
 }
 
-startServer();
+// For Vercel Serverless Functions
+let app: any;
+export default async (req: any, res: any) => {
+  if (!app) {
+    app = await startServer();
+  }
+  return app(req, res);
+};
