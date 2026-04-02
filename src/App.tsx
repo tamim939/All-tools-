@@ -51,13 +51,14 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [videoData, setVideoData] = useState<VideoData | null>(null);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || 
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const [darkMode, setDarkMode] = useState(false); // Force light mode by default for everyone
+
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark') {
+      setDarkMode(true);
     }
-    return false;
-  });
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;

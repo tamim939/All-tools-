@@ -4,11 +4,19 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Ensure dark mode works with the .dark class */
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html {
     @apply transition-colors duration-300;
   }
+  
+  /* Force light mode by default */
+  :root {
+    color-scheme: light;
+  }
+
   html.dark {
     color-scheme: dark;
   }
